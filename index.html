@@ -1,0 +1,263 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Piano Tutor AI</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0" rel="stylesheet">
+
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a href="#" class="brand" id="brand-home">Piano Tutor <span>AI</span></a>
+    <div class="header-right">
+      <span class="header-status"><i></i> Tutor pessoal com IA</span>
+      <button class="settings-btn" id="open-settings-btn" type="button" aria-label="Configurações da API" title="Configurações da API">
+        <span class="material-symbols-outlined">settings</span>
+      </button>
+      <button class="avatar" type="button" aria-label="Perfil">
+        <span class="material-symbols-outlined">person</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="home-screen" id="home-screen">
+      <div class="hero">
+        <div class="eyebrow"><i></i> TUTOR PESSOAL COM IA</div>
+        <h1>Aprenda piano<br>no seu ritmo</h1>
+        <p class="hero-copy">
+          Seu tutor virtual para aprender teoria musical, acordes e músicas passo a passo.
+        </p>
+
+        <form class="start-form" id="start-form">
+          <span class="material-symbols-outlined search-icon">search</span>
+          <input id="prompt-input" type="text" autocomplete="off"
+            placeholder="O que você gostaria de aprender?">
+          <button class="primary-btn" type="submit">
+            Começar conversa
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </form>
+
+        <div class="suggestions">
+          <p>SUGESTÕES RÁPIDAS</p>
+          <div class="suggestion-list">
+            <button type="button" class="suggestion-pill" data-suggestion="Quero aprender acordes">
+              Aprender acordes <span class="material-symbols-outlined">north_east</span>
+            </button>
+            <button type="button" class="suggestion-pill" data-suggestion="Quero aprender uma música">
+              Aprender uma música <span class="material-symbols-outlined">north_east</span>
+            </button>
+            <button type="button" class="suggestion-pill" data-suggestion="Quero tirar dúvidas de teoria musical">
+              Tirar dúvidas de teoria musical <span class="material-symbols-outlined">north_east</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEGUNDA TELA: CHAT E PIANO INTEGRADOS -->
+    <section class="studio-screen hidden" id="studio-screen">
+      <div class="studio-heading">
+        <div>
+          <div class="eyebrow"><i></i> SESSÃO INTERATIVA</div>
+          <h1>Seu estúdio de prática</h1>
+          <p>Converse com seu tutor e pratique no teclado ao mesmo tempo.</p>
+        </div>
+
+        <div class="view-switcher" role="group" aria-label="Modo de visualização">
+          <button class="view-btn active" type="button" data-view="both">
+            <span class="material-symbols-outlined">view_quilt</span>
+            <span>Chat + Piano</span>
+          </button>
+          <button class="view-btn" type="button" data-view="chat">
+            <span class="material-symbols-outlined">chat</span>
+            <span>Só Chat</span>
+          </button>
+          <button class="view-btn" type="button" data-view="piano">
+            <span class="material-symbols-outlined">piano</span>
+            <span>Só Piano</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="workspace view-both" id="workspace">
+        <!-- CHAT -->
+        <section class="panel chat-panel" id="chat-panel" aria-label="Conversa com o tutor">
+          <div class="panel-title">
+            <div class="bot-avatar">
+              <span class="material-symbols-outlined">smart_toy</span>
+            </div>
+            <div>
+              <h2>Piano Tutor AI</h2>
+              <p><i class="online-dot"></i> Disponível para ajudar</p>
+            </div>
+            <span class="panel-tag">TUTOR IA</span>
+          </div>
+
+          <div class="chat-messages" id="chat-messages" aria-live="polite">
+          
+          </div>
+
+          <form class="chat-composer" id="chat-form">
+            <input id="chat-input" type="text" autocomplete="off"
+              placeholder="Digite sua mensagem..." aria-label="Digite sua mensagem">
+            <button class="send-btn" type="submit" aria-label="Enviar mensagem">
+              <span class="material-symbols-outlined">send</span>
+            </button>
+          </form>
+          <p class="chat-footnote">Aprenda no seu ritmo, uma nota de cada vez.</p>
+        </section>
+
+        <!-- PIANO -->
+        <section class="panel piano-panel" id="piano-panel" aria-label="Piano virtual">
+          <div class="panel-title piano-title">
+            <div>
+              <div class="eyebrow"><i></i> PRÁTICA INTERATIVA</div>
+              <h2>Piano virtual</h2>
+              <p>Clique nas teclas ou use o teclado do computador.</p>
+            </div>
+            <span class="material-symbols-outlined piano-title-icon">piano</span>
+          </div>
+
+          <div class="keyboard-tip">
+            <span class="material-symbols-outlined">keyboard</span>
+            Use A, S, D, F, G, H, J e W, E, T, Y, U
+          </div>
+
+          <div class="piano-shell">
+            <div class="piano-keys" id="piano-keys" aria-label="Teclado de piano virtual">
+              <button class="white-key" data-note="C4" data-key="a" aria-label="Dó, tecla A"><span class="key-hint">A</span><span class="note-name">Dó</span><span class="note-letter">C</span></button>
+              <button class="white-key" data-note="D4" data-key="s" aria-label="Ré, tecla S"><span class="key-hint">S</span><span class="note-name">Ré</span><span class="note-letter">D</span></button>
+              <button class="white-key" data-note="E4" data-key="d" aria-label="Mi, tecla D"><span class="key-hint">D</span><span class="note-name">Mi</span><span class="note-letter">E</span></button>
+              <button class="white-key" data-note="F4" data-key="f" aria-label="Fá, tecla F"><span class="key-hint">F</span><span class="note-name">Fá</span><span class="note-letter">F</span></button>
+              <button class="white-key" data-note="G4" data-key="g" aria-label="Sol, tecla G"><span class="key-hint">G</span><span class="note-name">Sol</span><span class="note-letter">G</span></button>
+              <button class="white-key" data-note="A4" data-key="h" aria-label="Lá, tecla H"><span class="key-hint">H</span><span class="note-name">Lá</span><span class="note-letter">A</span></button>
+              <button class="white-key" data-note="B4" data-key="j" aria-label="Si, tecla J"><span class="key-hint">J</span><span class="note-name">Si</span><span class="note-letter">B</span></button>
+
+              <button class="black-key" data-note="C#4" data-key="w" aria-label="Dó sustenido, tecla W"><span>W</span><small>C#</small></button>
+              <button class="black-key" data-note="D#4" data-key="e" aria-label="Ré sustenido, tecla E"><span>E</span><small>D#</small></button>
+              <button class="black-key" data-note="F#4" data-key="t" aria-label="Fá sustenido, tecla T"><span>T</span><small>F#</small></button>
+              <button class="black-key" data-note="G#4" data-key="y" aria-label="Sol sustenido, tecla Y"><span>Y</span><small>G#</small></button>
+              <button class="black-key" data-note="A#4" data-key="u" aria-label="Lá sustenido, tecla U"><span>U</span><small>A#</small></button>
+            </div>
+          </div>
+
+          <div class="piano-feedback">
+            <span>Nota selecionada:</span>
+            <strong class="selected-note" id="selected-note"><i></i> —</strong>
+            <span class="tuning">Afinação: <b>A4 = 440 Hz</b></span>
+          </div>
+
+          <div class="piano-actions">
+            <button class="primary-btn" id="play-scale" type="button">
+              <span class="material-symbols-outlined">play_circle</span> Ouvir escala de Dó
+            </button>
+            <button class="secondary-btn" id="clear-note" type="button">
+              <span class="material-symbols-outlined">restart_alt</span> Limpar seleção
+            </button>
+          </div>
+
+          <div class="key-map">
+            <div class="key-map-head">
+              <strong>MAPEAMENTO DO TECLADO</strong>
+              <span>Escala natural e acidentes</span>
+            </div>
+            <div class="key-map-grid">
+              <span><kbd>A</kbd> Dó (C)</span>
+              <span><kbd>S</kbd> Ré (D)</span>
+              <span><kbd>D</kbd> Mi (E)</span>
+              <span><kbd>F</kbd> Fá (F)</span>
+              <span><kbd>G</kbd> Sol (G)</span>
+              <span><kbd>H</kbd> Lá (A)</span>
+              <span><kbd>J</kbd> Si (B)</span>
+              <span><kbd>W E T Y U</kbd> Sustenidos (#)</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <button class="back-home" id="back-home" type="button">
+        <span class="material-symbols-outlined">arrow_back</span> Voltar ao início
+      </button>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>© 2025 Piano Tutor AI. Instrução musical clara e acolhedora.</span>
+    <div>
+      <a href="#privacy">Privacidade</a>
+      <a href="#terms">Termos</a>
+      <a href="mailto:feedback@example.com">Feedback</a>
+    </div>
+  </footer>
+
+  <!-- MODAL DE CONFIGURAÇÕES DA API -->
+  <div class="modal-backdrop hidden" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="material-symbols-outlined modal-icon">settings</span>
+          <h2 id="modal-title">Configurações da API</h2>
+        </div>
+        <button class="modal-close-btn" id="modal-close-btn" type="button" aria-label="Fechar modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-desc">
+          Configure as credenciais de conexão com o modelo de inteligência artificial do tutor.
+        </p>
+
+        <div id="modal-alert" class="modal-alert hidden" role="alert"></div>
+
+        <form id="settings-form" novalidate>
+          <div class="form-group">
+            <label for="cfg-api-key">API Key <span class="required">*</span></label>
+            <div class="input-password-wrap">
+              <input type="password" id="cfg-api-key" placeholder="Ex: sk-..." autocomplete="off">
+              <button type="button" class="toggle-password-btn" id="toggle-key-visibility" aria-label="Mostrar ou ocultar chave">
+                <span class="material-symbols-outlined">visibility</span>
+              </button>
+            </div>
+            <small class="field-hint">Sua chave é armazenada com segurança localmente no seu navegador.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="cfg-endpoint">Endpoint (URL) <span class="required">*</span></label>
+            <input type="url" id="cfg-endpoint" placeholder="Ex: https://api.openai.com/v1/chat/completions">
+            <small class="field-hint">URL completa do endpoint de chat completions (HTTP ou HTTPS).</small>
+          </div>
+
+          <div class="form-group">
+            <label for="cfg-model">Model <span class="required">*</span></label>
+            <input type="text" id="cfg-model" placeholder="Ex: gpt-4o, gpt-3.5-turbo, gemini-1.5-flash">
+            <small class="field-hint">Identificador do modelo que atenderá as mensagens.</small>
+          </div>
+
+          <div class="config-source-status" id="config-source-info">
+            <span class="material-symbols-outlined">info</span>
+            <span id="source-status-text">Carregando fonte atual...</span>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="secondary-btn" id="modal-cancel-btn">Cancelar</button>
+            <button type="submit" class="primary-btn" id="modal-save-btn">
+              <span class="material-symbols-outlined">save</span>
+              Salvar configurações
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+  <script type="module" src="./js/api.js"></script>
+  <script type="module" src="./js/config.js"></script>
+  <script type="module" src="./js/script.js"></script>
+</html>
