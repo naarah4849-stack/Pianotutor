@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -16,7 +16,7 @@
   <header class="topbar">
     <a href="#" class="brand" id="brand-home">Piano Tutor <span>AI</span></a>
     <div class="header-right">
-      <span class="header-status"><i></i> Tutor pessoal com IA</span>
+      <span class="header-status" id="header-status"><i></i> Tutor pessoal com IA (<span id="header-provider-label">Gemini</span>)</span>
       <button class="settings-btn" id="open-settings-btn" type="button" aria-label="Configurações da API" title="Configurações da API">
         <span class="material-symbols-outlined">settings</span>
       </button>
@@ -98,7 +98,7 @@
               <h2>Piano Tutor AI</h2>
               <p><i class="online-dot"></i> Disponível para ajudar</p>
             </div>
-            <span class="panel-tag">TUTOR IA</span>
+            <span class="panel-tag" id="chat-provider-tag">TUTOR IA (GEMINI)</span>
           </div>
 
           <div class="chat-messages" id="chat-messages" aria-live="polite">
@@ -198,7 +198,7 @@
     </div>
   </footer>
 
-  <!-- MODAL DE CONFIGURAÇÕES DA API -->
+  <!-- MODAL DE CONFIGURAÇÕES DA API (SUPORTE GOOGLE GEMINI & AZURE OPENAI) -->
   <div class="modal-backdrop hidden" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-card">
       <div class="modal-header">
@@ -211,40 +211,103 @@
 
       <div class="modal-body">
         <p class="modal-desc">
-          Configure as credenciais de conexão com o modelo de inteligência artificial do tutor.
+          Configure as credenciais e selecione o provedor de IA responsável pelas respostas do tutor musical.
         </p>
 
         <div id="modal-alert" class="modal-alert hidden" role="alert"></div>
 
         <form id="settings-form" novalidate>
-          <div class="form-group">
-            <label for="cfg-api-key">API Key <span class="required">*</span></label>
-            <div class="input-password-wrap">
-              <input type="password" id="cfg-api-key" placeholder="Ex: sk-..." autocomplete="off">
-              <button type="button" class="toggle-password-btn" id="toggle-key-visibility" aria-label="Mostrar ou ocultar chave">
-                <span class="material-symbols-outlined">visibility</span>
+          <!-- SELETOR DO PROVEDOR ATIVO -->
+          <div class="form-group provider-selection-section">
+            <label class="provider-section-label">Provedor de IA Ativo para o Chat</label>
+            <div class="provider-switch-group" role="radiogroup" aria-label="Selecione o provedor de IA">
+              <button type="button" class="provider-switch-btn active" id="btn-select-gemini" data-provider="gemini" role="radio" aria-checked="true">
+                <span class="material-symbols-outlined provider-icon">auto_awesome</span>
+                <div class="provider-switch-text">
+                  <span class="provider-switch-title">Google Gemini</span>
+                  <span class="provider-switch-tag">Padrão</span>
+                </div>
+              </button>
+              <button type="button" class="provider-switch-btn" id="btn-select-azure" data-provider="azure" role="radio" aria-checked="false">
+                <span class="material-symbols-outlined provider-icon">cloud</span>
+                <div class="provider-switch-text">
+                  <span class="provider-switch-title">Azure OpenAI</span>
+                </div>
               </button>
             </div>
-            <small class="field-hint">Sua chave é armazenada com segurança localmente no seu navegador.</small>
+            <small class="field-hint">O provedor selecionado responderá imediatamente às dúvidas no chat.</small>
           </div>
 
-          <div class="form-group">
-            <label for="cfg-endpoint">Endpoint (URL) <span class="required">*</span></label>
-            <input type="url" id="cfg-endpoint" placeholder="Ex: https://api.openai.com/v1/chat/completions">
-            <small class="field-hint">URL completa do endpoint de chat completions (HTTP ou HTTPS).</small>
+          <!-- ABAS DE CONFIGURAÇÃO (GOOGLE GEMINI E AZURE OPENAI) -->
+          <div class="modal-tabs" role="tablist" aria-label="Abas de configuração por provedor">
+            <button type="button" class="modal-tab-btn active" id="tab-btn-gemini" data-tab="gemini" role="tab" aria-selected="true" aria-controls="panel-gemini">
+              <span class="material-symbols-outlined">auto_awesome</span>
+              <span>Google Gemini</span>
+            </button>
+            <button type="button" class="modal-tab-btn" id="tab-btn-azure" data-tab="azure" role="tab" aria-selected="false" aria-controls="panel-azure">
+              <span class="material-symbols-outlined">cloud</span>
+              <span>Azure OpenAI</span>
+            </button>
           </div>
 
-          <div class="form-group">
-            <label for="cfg-model">Model <span class="required">*</span></label>
-            <input type="text" id="cfg-model" placeholder="Ex: gpt-4o, gpt-3.5-turbo, gemini-1.5-flash">
-            <small class="field-hint">Identificador do modelo que atenderá as mensagens.</small>
+          <!-- ABA 1: GOOGLE GEMINI -->
+          <div class="tab-panel active" id="panel-gemini" role="tabpanel" aria-labelledby="tab-btn-gemini">
+            <div class="form-group">
+              <label for="cfg-gemini-key">API Key Google Gemini <span class="required">*</span></label>
+              <div class="input-password-wrap">
+                <input type="password" id="cfg-gemini-key" placeholder="Ex: AIzaSy..." autocomplete="off">
+                <button type="button" class="toggle-password-btn" id="toggle-gemini-key-visibility" aria-label="Mostrar ou ocultar chave do Gemini">
+                  <span class="material-symbols-outlined">visibility</span>
+                </button>
+              </div>
+              <small class="field-hint">Obtenha sua chave gratuitamente no Google AI Studio (aistudio.google.com).</small>
+            </div>
+
+            <div class="form-group">
+              <label for="cfg-gemini-model">Modelo Gemini <span class="required">*</span></label>
+              <input type="text" id="cfg-gemini-model" placeholder="Ex: gemini-1.5-flash, gemini-1.5-pro, gemini-2.0-flash" value="gemini-1.5-flash">
+              <small class="field-hint">Modelo recomendado: <b>gemini-1.5-flash</b> (respostas rápidas e didáticas).</small>
+            </div>
+
+            <div class="field-info-badge">
+              <span class="material-symbols-outlined">check_circle</span>
+              <span>Endpoint oficial gerenciado automaticamente: Google Generative Language REST API.</span>
+            </div>
           </div>
 
+          <!-- ABA 2: AZURE OPENAI -->
+          <div class="tab-panel hidden" id="panel-azure" role="tabpanel" aria-labelledby="tab-btn-azure">
+            <div class="form-group">
+              <label for="cfg-azure-key">API Key Azure OpenAI <span class="required">*</span></label>
+              <div class="input-password-wrap">
+                <input type="password" id="cfg-azure-key" placeholder="Ex: sk-... ou chave gerada no Azure" autocomplete="off">
+                <button type="button" class="toggle-password-btn" id="toggle-azure-key-visibility" aria-label="Mostrar ou ocultar chave do Azure">
+                  <span class="material-symbols-outlined">visibility</span>
+                </button>
+              </div>
+              <small class="field-hint">Chave de acesso disponibilizada no recurso do portal Azure.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="cfg-azure-endpoint">Endpoint (URL) <span class="required">*</span></label>
+              <input type="url" id="cfg-azure-endpoint" placeholder="Ex: https://meu-recurso.openai.azure.com/openai/deployments/meu-modelo/chat/completions?api-version=2024-02-15-preview">
+              <small class="field-hint">URL completa do endpoint de chat completions (HTTP ou HTTPS).</small>
+            </div>
+
+            <div class="form-group">
+              <label for="cfg-azure-model">Modelo / Deployment <span class="required">*</span></label>
+              <input type="text" id="cfg-azure-model" placeholder="Ex: gpt-4o, gpt-35-turbo">
+              <small class="field-hint">Nome da implantação (deployment) configurada no Azure OpenAI Studio.</small>
+            </div>
+          </div>
+
+          <!-- STATUS DA FONTE DE CONFIGURAÇÃO -->
           <div class="config-source-status" id="config-source-info">
             <span class="material-symbols-outlined">info</span>
             <span id="source-status-text">Carregando fonte atual...</span>
           </div>
 
+          <!-- BOTÕES DE AÇÃO -->
           <div class="modal-actions">
             <button type="button" class="secondary-btn" id="modal-cancel-btn">Cancelar</button>
             <button type="submit" class="primary-btn" id="modal-save-btn">

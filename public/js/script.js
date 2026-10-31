@@ -1,4 +1,4 @@
-import { ConfigManager } from "./config.js";
+import { ConfigManager, PROVIDERS } from "./config.js";
 import { ApiService } from "./api.js";
 
 (() => {
@@ -15,19 +15,41 @@ import { ApiService } from "./api.js";
   const workspace = $("#workspace");
   const selectedNote = $("#selected-note");
 
-  // Elementos do Modal de Configuração
+  // Elementos de status do provedor na interface
+  const headerProviderLabel = $("#header-provider-label");
+  const chatProviderTag = $("#chat-provider-tag");
+
+  // Elementos do Modal de Configuração Multi-Provedor
   const settingsModal = $("#settings-modal");
   const openSettingsBtn = $("#open-settings-btn");
   const modalCloseBtn = $("#modal-close-btn");
   const modalCancelBtn = $("#modal-cancel-btn");
   const settingsForm = $("#settings-form");
-  const cfgApiKey = $("#cfg-api-key");
-  const cfgEndpoint = $("#cfg-endpoint");
-  const cfgModel = $("#cfg-model");
   const modalAlert = $("#modal-alert");
   const sourceStatusText = $("#source-status-text");
-  const toggleKeyVisibilityBtn = $("#toggle-key-visibility");
 
+  // Seletor de Provedor
+  const btnSelectGemini = $("#btn-select-gemini");
+  const btnSelectAzure = $("#btn-select-azure");
+
+  // Abas de Configuração
+  const tabBtnGemini = $("#tab-btn-gemini");
+  const tabBtnAzure = $("#tab-btn-azure");
+  const panelGemini = $("#panel-gemini");
+  const panelAzure = $("#panel-azure");
+
+  // Campos Google Gemini
+  const cfgGeminiKey = $("#cfg-gemini-key");
+  const cfgGeminiModel = $("#cfg-gemini-model");
+  const toggleGeminiKeyVisibility = $("#toggle-gemini-key-visibility");
+
+  // Campos Azure OpenAI
+  const cfgAzureKey = $("#cfg-azure-key");
+  const cfgAzureEndpoint = $("#cfg-azure-endpoint");
+  const cfgAzureModel = $("#cfg-azure-model");
+  const toggleAzureKeyVisibility = $("#toggle-azure-key-visibility");
+
+  let currentSelectedProvider = PROVIDERS.GEMINI;
   let audioContext = null;
   const conversationHistory = [];
 
@@ -205,7 +227,8 @@ import { ApiService } from "./api.js";
 
     const bubble = document.createElement("div");
     bubble.className = "bubble";
-    bubble.innerHTML = '<span style="color: var(--muted); font-style: italic;">O tutor está pensando...</span>';
+    const providerName = ConfigManager.getActiveProvider() === PROVIDERS.GEMINI ? "Gemini" : "Azure OpenAI";
+    bubble.innerHTML = `<span style="color: var(--muted); font-style: italic;">O tutor está pensando (${providerName})...</span>`;
     row.appendChild(bubble);
 
     messages.appendChild(row);
@@ -228,13 +251,23 @@ import { ApiService } from "./api.js";
     addMessage(clean, "user");
     chatInput.value = "";
 
-    // Valida se há configuração ativa antes de tentar chamar
-    if (!ConfigManager.hasValidConfig()) {
-      addMessage(
-        "É necessário configurar a API para conversar com o tutor. Por favor, clique no botão de configurações (engrenagem) no canto superior direito para cadastrar suas credenciais.",
-        "tutor",
-        true
-      );
+    const activeProvider = ConfigManager.getActiveProvider();
+
+    // Valida se o provedor ativo possui credenciais antes de tentar enviar
+    if (!ConfigManager.hasValidConfig(activeProvider)) {
+      if (activeProvider === PROVIDERS.GEMINI) {
+        addMessage(
+          "A API do Google Gemini ainda não foi configurada. Por favor, clique no botão de configurações (engrenagem) no canto superior direito para inserir sua API Key do Google Gemini.",
+          "tutor",
+          true
+        );
+      } else {
+        addMessage(
+          "A API do Azure OpenAI ainda não foi configurada. Por favor, clique no botão de configurações (engrenagem) para cadastrar sua API Key, Endpoint e Modelo do Azure.",
+          "tutor",
+          true
+        );
+      }
       return;
     }
 
@@ -246,7 +279,6 @@ import { ApiService } from "./api.js";
 
       if (result.success && result.text) {
         addMessage(result.text, "tutor");
-        // Mantém histórico da conversa em memória
         conversationHistory.push({ role: "user", content: clean });
         conversationHistory.push({ role: "assistant", content: result.text });
       } else {
@@ -254,7 +286,7 @@ import { ApiService } from "./api.js";
       }
     } catch (err) {
       removeTypingIndicator();
-      addMessage("Falha inesperada ao contatar a API. Verifique suas configurações de rede e endpoint.", "tutor", true);
+      addMessage("Falha inesperada ao contatar o provedor de IA. Verifique suas configurações de rede e credenciais.", "tutor", true);
     }
   }
 
@@ -398,7 +430,7 @@ import { ApiService } from "./api.js";
   });
 
   // ==========================================
-  // GERENCIAMENTO DA MODAL DE CONFIGURAÇÕES
+  // GERENCIAMENTO DA MODAL DE CONFIGURAÇÕES MULTI-PROVEDOR
   // ==========================================
 
   function showModalAlert(message, type = "error") {
@@ -412,29 +444,121 @@ import { ApiService } from "./api.js";
     modalAlert.textContent = "";
   }
 
+  // Atualiza indicadores visuais do provedor ativo no cabeçalho e na interface
+  function updateProviderUI() {
+    const activeProvider = ConfigManager.getActiveProvider();
+    const isGemini = activeProvider === PROVIDERS.GEMINI;
+
+    if (headerProviderLabel) {
+      headerProviderLabel.textContent = isGemini ? "Google Gemini" : "Azure OpenAI";
+    }
+
+    if (chatProviderTag) {
+      chatProviderTag.textContent = isGemini ? "TUTOR IA (GEMINI)" : "TUTOR IA (AZURE)";
+    }
+
+    updateSourceStatusText();
+  }
+
   function updateSourceStatusText() {
     const source = ConfigManager.getActiveSource();
+    const activeProvider = ConfigManager.getActiveProvider();
+    const providerName = activeProvider === PROVIDERS.GEMINI ? "Google Gemini" : "Azure OpenAI";
+
+    let sourceDesc = "";
     if (source === "localStorage") {
-      sourceStatusText.innerHTML = "Fonte ativa: <b>localStorage</b> (Prioridade 1 — definida pelo usuário)";
+      sourceDesc = "<b>localStorage</b> (Prioridade 1 — definida pelo usuário)";
     } else if (source === "env.json") {
-      sourceStatusText.innerHTML = "Fonte ativa: <b>env.json</b> (Prioridade 2 — arquivo padrão)";
+      sourceDesc = "<b>env.json</b> (Prioridade 2 — arquivo padrão)";
     } else {
-      sourceStatusText.innerHTML = "Nenhuma configuração ativa no momento (Preencha os campos abaixo).";
+      sourceDesc = "Nenhuma fonte persistida (Preencha os campos abaixo)";
+    }
+
+    sourceStatusText.innerHTML = `Provedor ativo: <b>${providerName}</b> | Fonte: ${sourceDesc}`;
+  }
+
+  // Alterna a seleção visual do provedor ativo no formulário
+  function setModalActiveProvider(provider) {
+    currentSelectedProvider = provider;
+
+    const isGemini = provider === PROVIDERS.GEMINI;
+    btnSelectGemini.classList.toggle("active", isGemini);
+    btnSelectGemini.setAttribute("aria-checked", String(isGemini));
+
+    btnSelectAzure.classList.toggle("active", !isGemini);
+    btnSelectAzure.setAttribute("aria-checked", String(!isGemini));
+
+    // Ao selecionar o provedor, navega diretamente para sua respectiva aba
+    switchTab(provider);
+  }
+
+  // Alterna visualmente entre as abas Gemini e Azure OpenAI
+  function switchTab(tab) {
+    const isGemini = tab === PROVIDERS.GEMINI;
+
+    tabBtnGemini.classList.toggle("active", isGemini);
+    tabBtnGemini.setAttribute("aria-selected", String(isGemini));
+
+    tabBtnAzure.classList.toggle("active", !isGemini);
+    tabBtnAzure.setAttribute("aria-selected", String(!isGemini));
+
+    panelGemini.classList.toggle("hidden", !isGemini);
+    panelAzure.classList.toggle("hidden", isGemini);
+
+    if (isGemini) {
+      cfgGeminiKey.focus();
+    } else {
+      cfgAzureKey.focus();
     }
   }
 
+  tabBtnGemini.addEventListener("click", () => switchTab(PROVIDERS.GEMINI));
+  tabBtnAzure.addEventListener("click", () => switchTab(PROVIDERS.AZURE));
+
+  btnSelectGemini.addEventListener("click", () => setModalActiveProvider(PROVIDERS.GEMINI));
+  btnSelectAzure.addEventListener("click", () => setModalActiveProvider(PROVIDERS.AZURE));
+
+  // Helper para alternar visibilidade de senhas
+  function setupPasswordToggle(button, input) {
+    button.addEventListener("click", () => {
+      const isPass = input.type === "password";
+      input.type = isPass ? "text" : "password";
+      const icon = button.querySelector(".material-symbols-outlined");
+      if (icon) {
+        icon.textContent = isPass ? "visibility_off" : "visibility";
+      }
+    });
+  }
+
+  setupPasswordToggle(toggleGeminiKeyVisibility, cfgGeminiKey);
+  setupPasswordToggle(toggleAzureKeyVisibility, cfgAzureKey);
+
   function openModal() {
     hideModalAlert();
-    const cfg = ConfigManager.getConfig();
-    cfgApiKey.value = cfg.apiKey || "";
-    cfgEndpoint.value = cfg.endpoint || "";
-    cfgModel.value = cfg.model || "";
 
-    [cfgApiKey, cfgEndpoint, cfgModel].forEach(input => input.classList.remove("is-invalid"));
+    const fullCfg = ConfigManager.getConfig();
+    const geminiCfg = fullCfg.providers[PROVIDERS.GEMINI] || {};
+    const azureCfg = fullCfg.providers[PROVIDERS.AZURE] || {};
+
+    // Popula campos Google Gemini
+    cfgGeminiKey.value = geminiCfg.apiKey || "";
+    cfgGeminiModel.value = geminiCfg.model || "gemini-1.5-flash";
+
+    // Popula campos Azure OpenAI
+    cfgAzureKey.value = azureCfg.apiKey || "";
+    cfgAzureEndpoint.value = azureCfg.endpoint || "";
+    cfgAzureModel.value = azureCfg.model || "";
+
+    // Remove eventuais classes de erro
+    [cfgGeminiKey, cfgGeminiModel, cfgAzureKey, cfgAzureEndpoint, cfgAzureModel].forEach(input => {
+      input.classList.remove("is-invalid");
+    });
+
+    // Define o provedor ativo atual e foca
+    setModalActiveProvider(fullCfg.activeProvider || PROVIDERS.GEMINI);
     updateSourceStatusText();
 
     settingsModal.classList.remove("hidden");
-    cfgApiKey.focus();
   }
 
   function closeModal() {
@@ -460,62 +584,73 @@ import { ApiService } from "./api.js";
     }
   });
 
-  // Alterna visibilidade da senha/API key
-  toggleKeyVisibilityBtn.addEventListener("click", () => {
-    const isPass = cfgApiKey.type === "password";
-    cfgApiKey.type = isPass ? "text" : "password";
-    const icon = toggleKeyVisibilityBtn.querySelector(".material-symbols-outlined");
-    if (icon) {
-      icon.textContent = isPass ? "visibility_off" : "visibility";
-    }
-  });
-
-  // Salvar configurações
+  // Submissão e salvamento das configurações
   settingsForm.addEventListener("submit", event => {
     event.preventDefault();
     hideModalAlert();
 
     const candidateConfig = {
-      apiKey: cfgApiKey.value,
-      endpoint: cfgEndpoint.value,
-      model: cfgModel.value
+      activeProvider: currentSelectedProvider,
+      providers: {
+        [PROVIDERS.GEMINI]: {
+          apiKey: cfgGeminiKey.value.trim(),
+          model: cfgGeminiModel.value.trim() || "gemini-1.5-flash"
+        },
+        [PROVIDERS.AZURE]: {
+          apiKey: cfgAzureKey.value.trim(),
+          endpoint: cfgAzureEndpoint.value.trim(),
+          model: cfgAzureModel.value.trim()
+        }
+      }
     };
 
-    const validation = ConfigManager.validate(candidateConfig);
-
-    // Destaque visual dos campos com erro
-    cfgApiKey.classList.toggle("is-invalid", !candidateConfig.apiKey.trim());
-    cfgEndpoint.classList.toggle("is-invalid", !candidateConfig.endpoint.trim());
-    cfgModel.classList.toggle("is-invalid", !candidateConfig.model.trim());
-
-    if (!validation.isValid) {
-      showModalAlert(validation.error, "error");
-      return;
+    // Validações visuais
+    if (currentSelectedProvider === PROVIDERS.GEMINI) {
+      cfgGeminiKey.classList.toggle("is-invalid", !candidateConfig.providers[PROVIDERS.GEMINI].apiKey);
+      cfgGeminiModel.classList.toggle("is-invalid", !candidateConfig.providers[PROVIDERS.GEMINI].model);
+    } else {
+      cfgAzureKey.classList.toggle("is-invalid", !candidateConfig.providers[PROVIDERS.AZURE].apiKey);
+      cfgAzureEndpoint.classList.toggle("is-invalid", !candidateConfig.providers[PROVIDERS.AZURE].endpoint);
+      cfgAzureModel.classList.toggle("is-invalid", !candidateConfig.providers[PROVIDERS.AZURE].model);
     }
 
     const saveResult = ConfigManager.saveConfig(candidateConfig);
+
     if (!saveResult.success) {
       showModalAlert(saveResult.error || "Erro ao salvar configurações.", "error");
+
+      // Direciona para a aba que possui erro
+      if (saveResult.error && saveResult.error.toLowerCase().includes("azure")) {
+        switchTab(PROVIDERS.AZURE);
+      } else if (saveResult.error && saveResult.error.toLowerCase().includes("gemini")) {
+        switchTab(PROVIDERS.GEMINI);
+      }
       return;
     }
 
-    showModalAlert("Configurações salvas com sucesso no localStorage!", "success");
-    updateSourceStatusText();
+    const providerName = currentSelectedProvider === PROVIDERS.GEMINI ? "Google Gemini" : "Azure OpenAI";
+    showModalAlert(`Configurações salvas com sucesso! Provedor ativo: ${providerName}.`, "success");
+
+    updateProviderUI();
 
     window.setTimeout(() => {
       closeModal();
-    }, 800);
+    }, 750);
   });
 
   // Inicialização do sistema de configuração
   async function initConfig() {
+    ConfigManager.subscribe(() => {
+      updateProviderUI();
+    });
+
     const res = await ConfigManager.initialize();
-    updateSourceStatusText();
+    updateProviderUI();
 
     if (!res.success) {
-      console.info("ConfigManager: Nenhuma configuração ativa encontrada.");
+      console.info("ConfigManager: Provedor padrão definido (Google Gemini). Aguardando credenciais.");
     } else {
-      console.info(`ConfigManager: Configuração inicializada com sucesso a partir de [${res.source}].`);
+      console.info(`ConfigManager: Configuração inicializada com sucesso a partir de [${res.source}]. Provedor ativo: [${res.activeProvider}].`);
     }
   }
 
